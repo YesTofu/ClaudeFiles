@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MULTICAM LOGGER</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: #1e1e1e;
+  --accent: #e8ff47;
+  --accent-dim: rgba(232,255,71,0.12);
+  --text: #f0f0f0;
+  --muted: #555;
+  --cam1: #ff6b6b;
+  --cam2: #4ecdc4;
+  --cam3: #a78bfa;
+  --cam4: #fbbf24;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* STATUS BAR */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background 0.2s;
+}
+.status-dot.live { background: #ef4444; animation: pulse 1.2s ease-in-out infinite; }
+.status-dot.ready { background: var(--accent); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.status-text.live { color: #ef4444; }
+.status-text.ready { color: var(--accent); }
+
+.elapsed {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.cut-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* MAIN LAYOUT */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* CAM PANEL */
+.cam-panel {
+  width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.panel-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.cam-btn {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.cam-btn::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--cam-color);
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+
+.cam-btn:hover { border-color: #333; background: #161616; }
+
+.cam-btn.active {
+  border-color: var(--cam-color);
+  background: rgba(255,255,255,0.04);
+}
+.cam-btn.active::before { opacity: 1; }
+
+.cam-btn.fired {
+  animation: camFire 0.3s ease;
+}
+@keyframes camFire {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+.key-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex-shrink: 0;
+  border: 1px solid #2a2a2a;
+  transition: all 0.12s;
+}
+.cam-btn.active .key-badge {
+  background: var(--cam-color);
+  color: #000;
+  border-color: var(--cam-color);
+}
+
+.cam-info { flex: 1; }
+.cam-name-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  width: 100%;
+  cursor: text;
+}
+.cam-name-input::placeholder { color: var(--muted); }
+
+.cam-cut-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cam-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cam-color);
+  opacity: 0.3;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.cam-btn.active .cam-indicator { opacity: 1; }
+
+/* CONTROLS */
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: #333; background: #161616; }
+.btn.primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 500;
+}
+.btn.primary:hover { background: #d4eb3a; }
+.btn.danger { color: #ef4444; border-color: #ef4444; }
+.btn.danger:hover { background: rgba(239,68,68,0.1); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* LOG PANEL */
+.log-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.log-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.log-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.log-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.log-scroll::-webkit-scrollbar { width: 4px; }
+.log-scroll::-webkit-scrollbar-track { background: transparent; }
+.log-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.log-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.log-empty-icon {
+  font-size: 32px;
+  opacity: 0.3;
+}
+
+.log-empty-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  height: 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background 0.1s;
+  animation: entryIn 0.2s ease;
+}
+
+@keyframes entryIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.log-entry:hover { background: rgba(255,255,255,0.02); }
+
+.log-entry.latest {
+  background: rgba(232,255,71,0.04);
+}
+
+.entry-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.entry-bar {
+  width: 2px;
+  height: 20px;
+  border-radius: 1px;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+.entry-cam {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.entry-tc {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+}
+
+.entry-duration {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* EXPORT PANEL */
+.export-panel {
+  width: 200px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.export-btn {
+  padding: 12px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.export-btn:hover:not(:disabled) { border-color: #333; background: #161616; }
+.export-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+.export-btn-label {
+  font-size: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+}
+.export-btn-desc {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.export-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--accent);
+  color: #000;
+  padding: 10px 18px;
+  border-radius: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* SHORTCUTS HINT */
+.shortcuts {
+  padding: 10px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.shortcut kbd {
+  background: var(--border);
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text);
+}
+
+/* SESSION NAME */
+.session-name {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  cursor: text;
+  width: 160px;
+}
+.session-name::placeholder { color: #333; }
+.session-name:focus { color: var(--text); border-bottom: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MULTICAM</div>
+  <div class="header-right">
+    <input class="session-name" type="text" placeholder="session name..." id="sessionName" value="">
+    <div class="clock" id="clock">00:00:00</div>
+  </div>
+</header>
+
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <div class="status-text" id="statusText">STANDBY</div>
+  <span class="elapsed" id="elapsed" style="display:none">00:00:00.000</span>
+  <span class="cut-count" id="cutCount" style="display:none">0 CUTS</span>
+</div>
+
+<div class="main">
+
+  <!-- CAM PANEL -->
+  <div class="cam-panel">
+    <div class="panel-label">Cameras</div>
+
+    <div class="cam-btn" id="cam1" style="--cam-color: var(--cam1)" onclick="logCut(1)" data-cam="1">
+      <div class="key-badge">1</div>
+      <div class="cam-info">
+        <input class="cam-name-input" type="text" value="Camera 1" id="camName1" onclick="event.stopPropagation()">
+        <div class="cam-cut-count" id="camCuts1">0 cuts</div>
+      </div>
+      <div class="cam-indicator"></div>
+    </div>
+
+    <div class="cam-btn" id="cam2" style="--cam-color: var(--cam2)" onclick="logCut(2)" data-cam="2">
+      <div class="key-badge">2</div>
+      <div class="cam-info">
+        <input class="cam-name-input" type="text" value="Camera 2" id="camName2" onclick="event.stopPropagation()">
+        <div class="cam-cut-count" id="camCuts2">0 cuts</div>
+      </div>
+      <div class="cam-indicator"></div>
+    </div>
+
+    <div class="cam-btn" id="cam3" style="--cam-color: var(--cam3)" onclick="logCut(3)" data-cam="3">
+      <div class="key-badge">3</div>
+      <div class="cam-info">
+        <input class="cam-name-input" type="text" value="Camera 3" id="camName3" onclick="event.stopPropagation()">
+        <div class="cam-cut-count" id="camCuts3">0 cuts</div>
+      </div>
+      <div class="cam-indicator"></div>
+    </div>
+
+    <div class="cam-btn" id="cam4" style="--cam-color: var(--cam4)" onclick="logCut(4)" data-cam="4">
+      <div class="key-badge">4</div>
+      <div class="cam-info">
+        <input class="cam-name-input" type="text" value="Camera 4" id="camName4" onclick="event.stopPropagation()">
+        <div class="cam-cut-count" id="camCuts4">0 cuts</div>
+      </div>
+      <div class="cam-indicator"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn primary" id="startBtn" onclick="startSession()">START</button>
+      <button class="btn danger" id="stopBtn" onclick="stopSession()" disabled>STOP</button>
+    </div>
+  </div>
+
+  <!-- LOG PANEL -->
+  <div class="log-panel">
+    <div class="log-header">
+      <div class="log-title">Cut Log</div>
+    </div>
+    <div class="log-scroll" id="logScroll">
+      <div class="log-empty" id="logEmpty">
+        <div class="log-empty-icon">⬛</div>
+        <div class="log-empty-text">Press START then 1–4 to log cuts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT PANEL -->
+  <div class="export-panel">
+    <div class="panel-label">Export</div>
+
+    <button class="export-btn" id="exportEDL" onclick="exportEDL()" disabled>
+      <div class="export-btn-label">EDL</div>
+      <div class="export-btn-desc">CMX 3600 · Premiere / Resolve</div>
+    </button>
+
+    <button class="export-btn" id="exportCSV" onclick="exportCSV()" disabled>
+      <div class="export-btn-label">CSV</div>
+      <div class="export-btn-desc">Spreadsheet · Excel / Sheets</div>
+    </button>
+
+    <button class="export-btn" id="exportFCPXML" onclick="exportFCPXML()" disabled>
+      <div class="export-btn-label">FCPXML</div>
+      <div class="export-btn-desc">Final Cut Pro X</div>
+    </button>
+
+    <div class="export-divider"></div>
+
+    <button class="export-btn" id="exportJSON" onclick="exportJSON()" disabled>
+      <div class="export-btn-label">JSON</div>
+      <div class="export-btn-desc">Raw log data</div>
+    </button>
+
+    <button class="export-btn" onclick="clearLog()" style="margin-top: auto; color: #555;">
+      <div class="export-btn-label" style="color:#555">Clear Log</div>
+      <div class="export-btn-desc">Reset everything</div>
+    </button>
+  </div>
+
+</div>
+
+<div class="shortcuts">
+  <div class="shortcut"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> Switch Camera</div>
+  <div class="shortcut"><kbd>Space</kbd> Start / Stop</div>
+  <div class="shortcut"><kbd>Z</kbd> Undo Last Cut</div>
+  <div class="shortcut"><kbd>E</kbd> Export EDL</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // State
+  let isRunning = false;
+  let startTime = null;
+  let sessionStartWall = null;
+  let cuts = [];
+  let currentCam = null;
+  let elapsedInterval = null;
+  let camCounts = {1:0, 2:0, 3:0, 4:0};
+  const VALID_CAMS = [1,2,3,4];
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Timecode helpers
+  function msToTC(ms) {
+    const s = Math.floor(ms / 1000);
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const millis = ms % 1000;
+    return `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${String(millis).padStart(3,'0')}`;
+  }
+
+  function msToDuration(ms) {
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms/1000).toFixed(1)}s`;
+    return `${Math.floor(ms/60000)}m ${Math.floor((ms%60000)/1000)}s`;
+  }
+
+  function getElapsed() {
+    if (!startTime) return 0;
+    return Date.now() - startTime;
+  }
+
+  // Session control
+  function startSession() {
+    if (isRunning) return;
+    isRunning = true;
+    startTime = Date.now();
+    sessionStartWall = new Date();
+
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('statusDot').className = 'status-dot live';
+    document.getElementById('statusText').className = 'status-text live';
+    document.getElementById('statusText').textContent = 'RECORDING';
+    document.getElementById('elapsed').style.display = '';
+    document.getElementById('cutCount').style.display = '';
+
+    elapsedInterval = setInterval(() => {
+      document.getElementById('elapsed').textContent = msToTC(getElapsed());
+    }, 40);
+
+    showToast('Session started');
+  }
+
+  function stopSession() {
+    if (!isRunning) return;
+    isRunning = false;
+
+    // Close last cut
+    if (cuts.length > 0 && !cuts[cuts.length-1].outMs) {
+      cuts[cuts.length-1].outMs = getElapsed();
+      cuts[cuts.length-1].outTC = msToTC(cuts[cuts.length-1].outMs);
+      renderLog();
+    }
+
+    clearInterval(elapsedInterval);
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('statusDot').className = 'status-dot ready';
+    document.getElementById('statusText').className = 'status-text ready';
+    document.getElementById('statusText').textContent = 'STOPPED';
+
+    setActiveCam(null);
+    enableExports();
+    showToast('Session stopped — ready to export');
+  }
+
+  function setActiveCam(n) {
+    [1,2,3,4].forEach(i => {
+      document.getElementById('cam'+i).classList.toggle('active', i === n);
+    });
+    currentCam = n;
+  }
+
+  function logCut(n) {
+    if (!isRunning) return;
+
+    const now = getElapsed();
+
+    // Close previous cut
+    if (cuts.length > 0 && !cuts[cuts.length-1].outMs) {
+      cuts[cuts.length-1].outMs = now;
+      cuts[cuts.length-1].outTC = msToTC(now);
+    }
+
+    // Open new cut
+    const camName = document.getElementById('camName'+n).value || 'Camera '+n;
+    cuts.push({
+      num: cuts.length + 1,
+      cam: n,
+      camName: camName,
+      inMs: now,
+      inTC: msToTC(now),
+      outMs: null,
+      outTC: null,
+      wallTime: new Date().toISOString()
+    });
+
+    camCounts[n]++;
+    document.getElementById('camCuts'+n).textContent = camCounts[n] + ' cut' + (camCounts[n]===1?'':'s');
+    document.getElementById('cutCount').textContent = cuts.length + ' CUT' + (cuts.length===1?'':'S');
+
+    setActiveCam(n);
+
+    // Fire animation
+    const btn = document.getElementById('cam'+n);
+    btn.classList.remove('fired');
+    void btn.offsetWidth;
+    btn.classList.add('fired');
+
+    renderLog();
+  }
+
+  // FIX: Don't wipe innerHTML — only remove .log-entry elements so #logEmpty stays in the DOM
+  function renderLog() {
+    const scroll = document.getElementById('logScroll');
+    const empty = document.getElementById('logEmpty');
+
+    // Remove only existing log entries, leaving the empty-state element intact
+    scroll.querySelectorAll('.log-entry').forEach(el => el.remove());
+
+    if (cuts.length === 0) {
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+
+    const colors = ['var(--cam1)','var(--cam2)','var(--cam3)','var(--cam4)'];
+
+    cuts.forEach((cut, idx) => {
+      const isLatest = idx === cuts.length - 1;
+      const duration = cut.outMs != null ? msToDuration(cut.outMs - cut.inMs) : '–';
+      const div = document.createElement('div');
+      div.className = 'log-entry' + (isLatest ? ' latest' : '');
+      div.innerHTML = `
+        <div class="entry-num">${String(cut.num).padStart(3,'0')}</div>
+        <div class="entry-bar" style="background:${colors[cut.cam-1]}"></div>
+        <div class="entry-cam" style="color:${colors[cut.cam-1]}">${cut.camName}</div>
+        <div class="entry-tc">${cut.inTC}${cut.outTC ? ' → '+cut.outTC : ''}</div>
+        <div class="entry-duration">${duration}</div>
+      `;
+      scroll.appendChild(div);
+    });
+
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  function enableExports() {
+    ['exportEDL','exportCSV','exportFCPXML','exportJSON'].forEach(id => {
+      document.getElementById(id).disabled = cuts.length === 0;
+    });
+  }
+
+  function undoLastCut() {
+    if (!isRunning || cuts.length === 0) return;
+    const removed = cuts.pop();
+    camCounts[removed.cam] = Math.max(0, camCounts[removed.cam]-1);
+    document.getElementById('camCuts'+removed.cam).textContent = camCounts[removed.cam] + ' cut' + (camCounts[removed.cam]===1?'':'s');
+    document.getElementById('cutCount').textContent = cuts.length + ' CUT' + (cuts.length===1?'':'S');
+    // Reopen previous
+    if (cuts.length > 0) {
+      cuts[cuts.length-1].outMs = null;
+      cuts[cuts.length-1].outTC = null;
+      setActiveCam(cuts[cuts.length-1].cam);
+    } else {
+      setActiveCam(null);
+    }
+    renderLog();
+    showToast('Last cut removed');
+  }
+
+  function clearLog() {
+    if (isRunning) { showToast('Stop session first'); return; }
+    cuts = [];
+    camCounts = {1:0,2:0,3:0,4:0};
+    currentCam = null;
+    [1,2,3,4].forEach(i => {
+      document.getElementById('camCuts'+i).textContent = '0 cuts';
+      document.getElementById('cam'+i).classList.remove('active');
+    });
+    document.getElementById('cutCount').textContent = '0 CUTS';
+    document.getElementById('elapsed').textContent = '00:00:00.000';
+    document.getElementById('statusDot').className = 'status-dot';
+    document.getElementById('statusText').className = 'status-text';
+    document.getElementById('statusText').textContent = 'STANDBY';
+    document.getElementById('elapsed').style.display = 'none';
+    document.getElementById('cutCount').style.display = 'none';
+    startTime = null;
+    ['exportEDL','exportCSV','exportFCPXML','exportJSON'].forEach(id => {
+      document.getElementById(id).disabled = true;
+    });
+    renderLog();
+    showToast('Log cleared');
+  }
+
+  // EXPORTS
+  function getSessionName() {
+    return document.getElementById('sessionName').value || 'multicam_log';
+  }
+
+  function downloadFile(content, filename, type) {
+    const blob = new Blob([content], {type});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportEDL() {
+    if (cuts.length === 0) return;
+    const name = getSessionName();
+    let edl = `TITLE: ${name}\nFCM: NON-DROP FRAME\n\n`;
+
+    cuts.forEach((cut, i) => {
+      if (!cut.outTC) return;
+      const reel = String(cut.cam).padStart(3,'0');
+      const num = String(i+1).padStart(3,'0');
+      edl += `${num}  ${reel}       V     C        ${cut.inTC} ${cut.outTC} ${cut.inTC} ${cut.outTC}\n`;
+      edl += `* FROM CLIP NAME: ${cut.camName}\n\n`;
+    });
+
+    downloadFile(edl, `${name}.edl`, 'text/plain');
+    showToast('EDL exported');
+  }
+
+  function exportCSV() {
+    if (cuts.length === 0) return;
+    const name = getSessionName();
+    let csv = 'Cut #,Camera,Camera Name,In TC,Out TC,In Ms,Out Ms,Duration Ms,Wall Time\n';
+    cuts.forEach(cut => {
+      csv += `${cut.num},${cut.cam},"${cut.camName}",${cut.inTC},${cut.outTC||''},${cut.inMs},${cut.outMs||''},${cut.outMs?cut.outMs-cut.inMs:''},"${cut.wallTime}"\n`;
+    });
+    downloadFile(csv, `${name}.csv`, 'text/csv');
+    showToast('CSV exported');
+  }
+
+  function exportFCPXML() {
+    if (cuts.length === 0) return;
+    const name = getSessionName();
+    const totalMs = cuts.length > 0 ? (cuts[cuts.length-1].outMs || getElapsed()) : 0;
+    const msToRational = ms => `${ms}/1000s`;
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<!DOCTYPE fcpxml>\n`;
+    xml += `<fcpxml version="1.9">\n`;
+    xml += `  <resources>\n`;
+    [1,2,3,4].forEach(i => {
+      xml += `    <format id="r${i}" name="FFVideoFormat1080p2398" frameDuration="1001/24000s" width="1920" height="1080"/>\n`;
+    });
+    [1,2,3,4].forEach(i => {
+      const camName = document.getElementById('camName'+i).value || 'Camera '+i;
+      xml += `    <asset id="asset${i}" name="${camName}" start="0s" duration="${msToRational(totalMs)}" hasVideo="1" hasAudio="1" format="r${i}">\n`;
+      xml += `      <media-rep kind="original-media" src="file:///path/to/${camName.replace(/ /g,'_')}.mp4"/>\n`;
+      xml += `    </asset>\n`;
+    });
+    xml += `  </resources>\n`;
+    xml += `  <library>\n    <event name="${name}">\n`;
+    xml += `      <project name="${name}">\n`;
+    xml += `        <sequence format="r1" duration="${msToRational(totalMs)}" tcStart="0s" tcFormat="NDF">\n`;
+    xml += `          <spine>\n`;
+
+    cuts.forEach(cut => {
+      if (!cut.outMs) return;
+      const dur = cut.outMs - cut.inMs;
+      xml += `            <clip name="${cut.camName}" offset="${msToRational(cut.inMs)}" duration="${msToRational(dur)}" start="${msToRational(cut.inMs)}">\n`;
+      xml += `              <asset-clip ref="asset${cut.cam}" offset="0s" duration="${msToRational(dur)}" start="${msToRational(cut.inMs)}"/>\n`;
+      xml += `            </clip>\n`;
+    });
+
+    xml += `          </spine>\n        </sequence>\n      </project>\n    </event>\n  </library>\n</fcpxml>`;
+    downloadFile(xml, `${name}.fcpxml`, 'text/xml');
+    showToast('FCPXML exported');
+  }
+
+  function exportJSON() {
+    if (cuts.length === 0) return;
+    const name = getSessionName();
+    const data = {
+      session: name,
+      startTime: sessionStartWall,
+      timecodeFormat: 'HH:MM:SS.mmm',
+      totalCuts: cuts.length,
+      cameras: [1,2,3,4].map(i => ({
+        id: i,
+        name: document.getElementById('camName'+i).value || 'Camera '+i,
+        cuts: camCounts[i]
+      })),
+      cuts: cuts
+    };
+    downloadFile(JSON.stringify(data, null, 2), `${name}.json`, 'application/json');
+    showToast('JSON exported');
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      isRunning ? stopSession() : startSession();
+      return;
+    }
+
+    const camNum = parseInt(e.key);
+    if (VALID_CAMS.includes(camNum)) {
+      logCut(camNum);
+      return;
+    }
+
+    if (e.key === 'z' || e.key === 'Z') { undoLastCut(); return; }
+    if (e.key === 'e' || e.key === 'E') { if (cuts.length > 0 && !isRunning) exportEDL(); return; }
+  });
+
+  // Init
+  renderLog();
+</script>
+
+</body>
+</html>
