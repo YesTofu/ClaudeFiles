@@ -512,10 +512,11 @@ header {
   <div class="logo">MULTICAM</div>
   <div class="header-right">
     <input class="session-name" type="text" placeholder="session name..." id="sessionName" value="">
-    <select id="fpsSelect" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
+    <select id="fpsSelect" title="Must match your Premiere/Resolve sequence frame rate AND the value entered in the EDL import dialog" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
+      <option value="2397">23.976 fps (24p)</option>
       <option value="24">24 fps</option>
       <option value="25">25 fps</option>
-      <option value="2997">29.97 fps</option>
+      <option value="2997">29.97 fps (DF)</option>
       <option value="30" selected>30 fps</option>
     </select>
     <div class="clock" id="clock">00:00:00</div>
@@ -865,13 +866,15 @@ header {
 
   function getFPS() {
     const val = document.getElementById('fpsSelect').value;
-    return val === '2997' ? 29.97 : parseFloat(val);
+    if (val === '2397') return 24000 / 1001; // true 23.976fps
+    if (val === '2997') return 30000 / 1001; // true 29.97fps
+    return parseFloat(val);
   }
 
   function msToEDLTC(ms) {
     const fps = getFPS();
-    const dropFrame = Math.abs(fps - 29.97) < 0.01;
-    const totalFrames = Math.round(ms * fps / 1000);
+    const dropFrame = Math.abs(fps - 30000/1001) < 0.01; // only 29.97 is drop frame
+    const totalFrames = Math.floor(ms * fps / 1000);     // floor = always round down, consistent with NLE frame counting
     const roundFps = Math.round(fps);
     const frames = totalFrames % roundFps;
     const totalSecs = Math.floor(totalFrames / roundFps);
