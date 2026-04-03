@@ -512,6 +512,12 @@ header {
   <div class="logo">MULTICAM</div>
   <div class="header-right">
     <input class="session-name" type="text" placeholder="session name..." id="sessionName" value="">
+    <select id="fpsSelect" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
+      <option value="24">24 fps</option>
+      <option value="25">25 fps</option>
+      <option value="2997">29.97 fps</option>
+      <option value="30" selected>30 fps</option>
+    </select>
     <div class="clock" id="clock">00:00:00</div>
   </div>
 </header>
@@ -857,16 +863,47 @@ header {
     URL.revokeObjectURL(a.href);
   }
 
+  function getFPS() {
+    const val = document.getElementById('fpsSelect').value;
+    return val === '2997' ? 29.97 : parseFloat(val);
+  }
+
+  function msToEDLTC(ms) {
+    const fps = getFPS();
+    const dropFrame = Math.abs(fps - 29.97) < 0.01;
+    const totalFrames = Math.round(ms * fps / 1000);
+    const roundFps = Math.round(fps);
+    const frames = totalFrames % roundFps;
+    const totalSecs = Math.floor(totalFrames / roundFps);
+    const secs = totalSecs % 60;
+    const mins = Math.floor(totalSecs / 60) % 60;
+    const hrs = Math.floor(totalSecs / 3600);
+    const sep = dropFrame ? ';' : ':';
+    return `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}${sep}${String(frames).padStart(2,'0')}`;
+  }
+
+  function toReelName(name) {
+    // EDL reel names: max 8 chars, alphanumeric only
+    return (name || 'CAM').replace(/[^a-zA-Z0-9]/g, '').substring(0, 8) || 'CAM';
+  }
+
   function exportEDL() {
     if (cuts.length === 0) return;
     const name = getSessionName();
-    let edl = `TITLE: ${name}\nFCM: NON-DROP FRAME\n\n`;
+    const fps = getFPS();
+    const dropFrame = Math.abs(fps - 29.97) < 0.01;
+    const fcm = dropFrame ? 'DROP FRAME' : 'NON-DROP FRAME';
+    let edl = `TITLE: ${name}\nFCM: ${fcm}\n\n`;
 
     cuts.forEach((cut, i) => {
-      if (!cut.outTC) return;
-      const reel = String(cut.cam).padStart(3,'0');
-      const num = String(i+1).padStart(3,'0');
-      edl += `${num}  ${reel}       V     C        ${cut.inTC} ${cut.outTC} ${cut.inTC} ${cut.outTC}\n`;
+      if (!cut.outMs) return;
+      const reel = toReelName(cut.camName);
+      const num = String(i + 1).padStart(3, '0');
+      const srcIn  = msToEDLTC(cut.inMs);
+      const srcOut = msToEDLTC(cut.outMs);
+      const recIn  = msToEDLTC(cut.inMs);
+      const recOut = msToEDLTC(cut.outMs);
+      edl += `${num}  ${reel.padEnd(8)}  V     C        ${srcIn} ${srcOut} ${recIn} ${recOut}\n`;
       edl += `* FROM CLIP NAME: ${cut.camName}\n\n`;
     });
 
