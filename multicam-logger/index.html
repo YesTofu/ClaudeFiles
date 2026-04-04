@@ -50,6 +50,12 @@ header {
   color: var(--accent);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -100,12 +106,13 @@ header {
 .status-text.ready { color: var(--accent); }
 
 .elapsed {
-  margin-left: auto;
   font-family: 'DM Mono', monospace;
   font-size: 13px;
-  color: var(--text);
+  color: var(--muted);
   letter-spacing: 1px;
 }
+.elapsed.live { color: #ef4444; }
+.elapsed.ready { color: var(--accent); }
 
 .cut-count {
   font-family: 'DM Mono', monospace;
@@ -390,54 +397,44 @@ header {
   text-align: right;
 }
 
-/* EXPORT PANEL */
-.export-panel {
-  width: 200px;
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 16px;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.export-btn {
-  padding: 12px 14px;
-  border-radius: 5px;
-  border: 1px solid var(--border);
+.footer-btn {
   background: var(--surface);
-  color: var(--text);
+  border: 1px solid var(--border);
+  color: var(--muted);
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
-  text-align: left;
+  white-space: nowrap;
+}
+.footer-btn:hover:not(:disabled) { border-color: #333; color: var(--text); }
+.footer-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.footer-btn.danger-btn { color: #555; }
+.footer-btn.danger-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+.export-menu-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.export-btn:hover:not(:disabled) { border-color: #333; background: #161616; }
-.export-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-
-.export-btn-label {
-  font-size: 12px;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-}
-.export-btn-desc {
-  font-size: 9px;
-  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
   letter-spacing: 1px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
 }
-
-.export-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 4px 0;
-}
+.export-menu-item:hover { background: rgba(255,255,255,0.05); }
+.export-menu-item:disabled { opacity: 0.3; cursor: not-allowed; }
+.export-menu-item span { font-size: 9px; color: var(--muted); letter-spacing: 0; }
 
 /* TOAST */
 .toast {
@@ -509,15 +506,17 @@ header {
 <body>
 
 <header>
-  <div class="logo">MULTICAM</div>
-  <div class="header-right">
+  <div class="header-left">
+    <div class="logo">MULTICAM</div>
     <input class="session-name" type="text" placeholder="session name..." id="sessionName" value="">
+  </div>
+  <div class="header-right">
     <select id="fpsSelect" title="Must match your Premiere/Resolve sequence frame rate AND the value entered in the EDL import dialog" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;cursor:pointer;letter-spacing:1px;">
-      <option value="2397">23.976 fps (24p)</option>
+      <option value="2397" selected>23.976 fps (24p)</option>
       <option value="24">24 fps</option>
       <option value="25">25 fps</option>
       <option value="2997">29.97 fps (DF)</option>
-      <option value="30" selected>30 fps</option>
+      <option value="30">30 fps</option>
     </select>
     <div class="clock" id="clock">00:00:00</div>
   </div>
@@ -527,7 +526,7 @@ header {
   <div class="status-dot" id="statusDot"></div>
   <div class="status-text" id="statusText">STANDBY</div>
   <span class="elapsed" id="elapsed" style="display:none">00:00:00.000</span>
-  <span class="cut-count" id="cutCount" style="display:none">0 CUTS</span>
+  <span class="cut-count" id="cutCount" style="display:none; margin-left:auto">0 CUTS</span>
 </div>
 
 <div class="main">
@@ -591,38 +590,6 @@ header {
     </div>
   </div>
 
-  <!-- EXPORT PANEL -->
-  <div class="export-panel">
-    <div class="panel-label">Export</div>
-
-    <button class="export-btn" id="exportEDL" onclick="exportEDL()" disabled>
-      <div class="export-btn-label">EDL</div>
-      <div class="export-btn-desc">CMX 3600 · Premiere / Resolve</div>
-    </button>
-
-    <button class="export-btn" id="exportCSV" onclick="exportCSV()" disabled>
-      <div class="export-btn-label">CSV</div>
-      <div class="export-btn-desc">Spreadsheet · Excel / Sheets</div>
-    </button>
-
-    <button class="export-btn" id="exportFCPXML" onclick="exportFCPXML()" disabled>
-      <div class="export-btn-label">FCPXML</div>
-      <div class="export-btn-desc">Final Cut Pro X</div>
-    </button>
-
-    <div class="export-divider"></div>
-
-    <button class="export-btn" id="exportJSON" onclick="exportJSON()" disabled>
-      <div class="export-btn-label">JSON</div>
-      <div class="export-btn-desc">Raw log data</div>
-    </button>
-
-    <button class="export-btn" onclick="clearLog()" style="margin-top: auto; color: #555;">
-      <div class="export-btn-label" style="color:#555">Clear Log</div>
-      <div class="export-btn-desc">Reset everything</div>
-    </button>
-  </div>
-
 </div>
 
 <div class="shortcuts">
@@ -630,6 +597,19 @@ header {
   <div class="shortcut"><kbd>Space</kbd> Start / Stop</div>
   <div class="shortcut"><kbd>Z</kbd> Undo Last Cut</div>
   <div class="shortcut"><kbd>E</kbd> Export EDL</div>
+  <div style="margin-left:auto; display:flex; gap:8px; align-items:center; position:relative;">
+    <button class="footer-btn danger-btn" onclick="newProject()">NEW PROJECT</button>
+    <div id="exportDropdown" style="position:relative;">
+      <button class="footer-btn" id="exportMenuBtn" onclick="toggleExportMenu()" disabled>EXPORT ▾</button>
+      <div id="exportMenu" style="display:none; position:absolute; bottom:calc(100% + 6px); right:0; background:var(--surface); border:1px solid var(--border); border-radius:6px; min-width:200px; overflow:hidden; z-index:50;">
+        <button class="export-menu-item" id="exportEDL" onclick="exportEDL()">EDL <span>Premiere / Resolve</span></button>
+        <button class="export-menu-item" id="exportCSV" onclick="exportCSV()">CSV <span>Spreadsheet</span></button>
+        <button class="export-menu-item" id="exportFCPXML" onclick="exportFCPXML()">FCPXML <span>Final Cut Pro</span></button>
+        <div style="height:1px; background:var(--border); margin:2px 0;"></div>
+        <button class="export-menu-item" id="exportJSON" onclick="exportJSON()">JSON <span>Raw log data</span></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -689,6 +669,7 @@ header {
     document.getElementById('statusDot').className = 'status-dot live';
     document.getElementById('statusText').className = 'status-text live';
     document.getElementById('statusText').textContent = 'RECORDING';
+    document.getElementById('elapsed').className = 'elapsed live';
     document.getElementById('elapsed').style.display = '';
     document.getElementById('cutCount').style.display = '';
 
@@ -716,6 +697,7 @@ header {
     document.getElementById('statusDot').className = 'status-dot ready';
     document.getElementById('statusText').className = 'status-text ready';
     document.getElementById('statusText').textContent = 'STOPPED';
+    document.getElementById('elapsed').className = 'elapsed ready';
 
     setActiveCam(null);
     enableExports();
@@ -803,10 +785,48 @@ header {
   }
 
   function enableExports() {
+    const hasCuts = cuts.length > 0;
+    document.getElementById('exportMenuBtn').disabled = !hasCuts;
     ['exportEDL','exportCSV','exportFCPXML','exportJSON'].forEach(id => {
-      document.getElementById(id).disabled = cuts.length === 0;
+      document.getElementById(id).disabled = !hasCuts;
     });
   }
+
+  function toggleExportMenu() {
+    const menu = document.getElementById('exportMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function newProject() {
+    if (isRunning) { showToast('Stop session first'); return; }
+    if (!confirm('Are you sure you want to start a new project?\nThis data will be lost.')) return;
+    cuts = [];
+    camCounts = {1:0,2:0,3:0,4:0};
+    currentCam = null;
+    [1,2,3,4].forEach(i => {
+      document.getElementById('camCuts'+i).textContent = '0 cuts';
+      document.getElementById('cam'+i).classList.remove('active');
+    });
+    document.getElementById('sessionName').value = '';
+    document.getElementById('cutCount').textContent = '0 CUTS';
+    document.getElementById('elapsed').textContent = '00:00:00.000';
+    document.getElementById('elapsed').className = 'elapsed';
+    document.getElementById('statusDot').className = 'status-dot';
+    document.getElementById('statusText').className = 'status-text';
+    document.getElementById('statusText').textContent = 'STANDBY';
+    document.getElementById('elapsed').style.display = 'none';
+    document.getElementById('cutCount').style.display = 'none';
+    startTime = null;
+    enableExports();
+    renderLog();
+    showToast('New project');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#exportDropdown')) {
+      document.getElementById('exportMenu').style.display = 'none';
+    }
+  });
 
   function undoLastCut() {
     if (!isRunning || cuts.length === 0) return;
@@ -824,30 +844,6 @@ header {
     }
     renderLog();
     showToast('Last cut removed');
-  }
-
-  function clearLog() {
-    if (isRunning) { showToast('Stop session first'); return; }
-    cuts = [];
-    camCounts = {1:0,2:0,3:0,4:0};
-    currentCam = null;
-    [1,2,3,4].forEach(i => {
-      document.getElementById('camCuts'+i).textContent = '0 cuts';
-      document.getElementById('cam'+i).classList.remove('active');
-    });
-    document.getElementById('cutCount').textContent = '0 CUTS';
-    document.getElementById('elapsed').textContent = '00:00:00.000';
-    document.getElementById('statusDot').className = 'status-dot';
-    document.getElementById('statusText').className = 'status-text';
-    document.getElementById('statusText').textContent = 'STANDBY';
-    document.getElementById('elapsed').style.display = 'none';
-    document.getElementById('cutCount').style.display = 'none';
-    startTime = null;
-    ['exportEDL','exportCSV','exportFCPXML','exportJSON'].forEach(id => {
-      document.getElementById(id).disabled = true;
-    });
-    renderLog();
-    showToast('Log cleared');
   }
 
   // EXPORTS
