@@ -19,6 +19,10 @@
   --cam2: #4ecdc4;
   --cam3: #a78bfa;
   --cam4: #fbbf24;
+  --cam5: #f97316;
+  --cam6: #22d3ee;
+  --cam7: #ec4899;
+  --cam8: #84cc16;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,7 +31,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -134,10 +138,24 @@ header {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 20px 16px;
-  gap: 10px;
+  padding: 16px 12px 12px;
+  gap: 8px;
   flex-shrink: 0;
+  overflow: hidden;
 }
+
+#camList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding-right: 2px;
+}
+#camList::-webkit-scrollbar { width: 3px; }
+#camList::-webkit-scrollbar-track { background: transparent; }
+#camList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .panel-label {
   font-family: 'DM Mono', monospace;
@@ -153,14 +171,14 @@ header {
   position: relative;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 14px 16px;
+  padding: 11px 14px;
   background: var(--surface);
   cursor: pointer;
   transition: all 0.12s ease;
   display: flex;
   align-items: center;
-  gap: 14px;
-  overflow: hidden;
+  gap: 12px;
+  flex-shrink: 0;
   user-select: none;
 }
 
@@ -244,6 +262,115 @@ header {
   transition: opacity 0.12s;
 }
 .cam-btn.active .cam-indicator { opacity: 1; }
+
+/* CAM DELETE BUTTON */
+.cam-remove {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #ef4444;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: 0;
+}
+.cam-btn:hover .cam-remove {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+.cam-remove:hover { background: rgba(239,68,68,0.25) !important; }
+
+/* ADD CAMERA BUTTON */
+.add-cam-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px;
+  border: 1px dashed #2a2a2a;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.add-cam-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* MARKER BUTTON */
+.marker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.marker-btn:hover:not(:disabled) {
+  border-color: #fbbf24;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.08);
+}
+.marker-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.marker-btn kbd {
+  background: var(--border);
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.marker-btn:hover:not(:disabled) kbd { color: #fbbf24; border-color: #fbbf24; }
+
+/* MARKER LOG ENTRY */
+.log-entry.marker {
+  background: rgba(251,191,36,0.04);
+  border-bottom-color: rgba(251,191,36,0.08);
+}
+.log-entry.marker .entry-tc { color: #fbbf24; }
+.marker-diamond {
+  font-size: 9px;
+  color: #fbbf24;
+  width: 80px;
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+}
 
 /* CONTROLS */
 .controls {
@@ -501,6 +628,34 @@ header {
 }
 .session-name::placeholder { color: #333; }
 .session-name:focus { color: var(--text); border-bottom: 1px solid var(--border); }
+
+/* MOBILE */
+@media (max-width: 767px) {
+  body { height: 100dvh; }
+  header { padding: 10px 14px; }
+  .logo { font-size: 18px; letter-spacing: 3px; }
+  .session-name { width: 110px; font-size: 10px; }
+  .header-right select { font-size: 10px; padding: 3px 6px; }
+  .status-bar { padding: 8px 14px; }
+  .main { flex-direction: column; }
+  .cam-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px;
+    max-height: 44vh;
+  }
+  #camList { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cam-btn { padding: 9px 10px; gap: 8px; }
+  .key-badge { width: 22px; height: 22px; font-size: 11px; }
+  .cam-name-input { font-size: 11px; }
+  .cam-cut-count { font-size: 9px; }
+  .add-cam-btn, .marker-btn { font-size: 9px; padding: 6px; }
+  .log-panel { min-height: 0; }
+  .shortcuts { padding: 8px 14px; }
+  .shortcut { display: none; }
+  .shortcuts > div:last-child { margin-left: 0; width: 100%; justify-content: space-between; }
+}
 </style>
 </head>
 <body>
@@ -534,43 +689,9 @@ header {
   <!-- CAM PANEL -->
   <div class="cam-panel">
     <div class="panel-label">Cameras</div>
-
-    <div class="cam-btn" id="cam1" style="--cam-color: var(--cam1)" onclick="logCut(1)" data-cam="1">
-      <div class="key-badge">1</div>
-      <div class="cam-info">
-        <input class="cam-name-input" type="text" value="Camera 1" id="camName1" onclick="event.stopPropagation()">
-        <div class="cam-cut-count" id="camCuts1">0 cuts</div>
-      </div>
-      <div class="cam-indicator"></div>
-    </div>
-
-    <div class="cam-btn" id="cam2" style="--cam-color: var(--cam2)" onclick="logCut(2)" data-cam="2">
-      <div class="key-badge">2</div>
-      <div class="cam-info">
-        <input class="cam-name-input" type="text" value="Camera 2" id="camName2" onclick="event.stopPropagation()">
-        <div class="cam-cut-count" id="camCuts2">0 cuts</div>
-      </div>
-      <div class="cam-indicator"></div>
-    </div>
-
-    <div class="cam-btn" id="cam3" style="--cam-color: var(--cam3)" onclick="logCut(3)" data-cam="3">
-      <div class="key-badge">3</div>
-      <div class="cam-info">
-        <input class="cam-name-input" type="text" value="Camera 3" id="camName3" onclick="event.stopPropagation()">
-        <div class="cam-cut-count" id="camCuts3">0 cuts</div>
-      </div>
-      <div class="cam-indicator"></div>
-    </div>
-
-    <div class="cam-btn" id="cam4" style="--cam-color: var(--cam4)" onclick="logCut(4)" data-cam="4">
-      <div class="key-badge">4</div>
-      <div class="cam-info">
-        <input class="cam-name-input" type="text" value="Camera 4" id="camName4" onclick="event.stopPropagation()">
-        <div class="cam-cut-count" id="camCuts4">0 cuts</div>
-      </div>
-      <div class="cam-indicator"></div>
-    </div>
-
+    <div id="camList"></div>
+    <button class="add-cam-btn" onclick="addCamera()">+ Add Camera</button>
+    <button class="marker-btn" id="markerBtn" onclick="addMarker()" disabled>◆ Add Marker <kbd>M</kbd></button>
     <div class="controls">
       <button class="btn primary" id="startBtn" onclick="startSession()">START</button>
       <button class="btn danger" id="stopBtn" onclick="stopSession()" disabled>STOP</button>
@@ -593,9 +714,10 @@ header {
 </div>
 
 <div class="shortcuts">
-  <div class="shortcut"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> Switch Camera</div>
+  <div class="shortcut"><kbd>1–8</kbd> Switch Camera</div>
+  <div class="shortcut"><kbd>M</kbd> Marker</div>
   <div class="shortcut"><kbd>Space</kbd> Start / Stop</div>
-  <div class="shortcut"><kbd>Z</kbd> Undo Last Cut</div>
+  <div class="shortcut"><kbd>Z</kbd> Undo</div>
   <div class="shortcut"><kbd>E</kbd> Export EDL</div>
   <div style="margin-left:auto; display:flex; gap:8px; align-items:center; position:relative;">
     <button class="footer-btn danger-btn" onclick="newProject()">NEW PROJECT</button>
@@ -615,15 +737,26 @@ header {
 <div class="toast" id="toast"></div>
 
 <script>
+  // Camera palette (cycles for cameras beyond 4)
+  const CAM_COLORS = ['var(--cam1)','var(--cam2)','var(--cam3)','var(--cam4)',
+                       'var(--cam5)','var(--cam6)','var(--cam7)','var(--cam8)'];
+
   // State
+  let cameras = [
+    {id:1, name:'Camera 1', color:'var(--cam1)'},
+    {id:2, name:'Camera 2', color:'var(--cam2)'},
+    {id:3, name:'Camera 3', color:'var(--cam3)'},
+    {id:4, name:'Camera 4', color:'var(--cam4)'},
+  ];
+  let nextCamId = 5;
+  let camCounts = {1:0,2:0,3:0,4:0};
   let isRunning = false;
   let startTime = null;
   let sessionStartWall = null;
   let cuts = [];
+  let markers = [];
   let currentCam = null;
   let elapsedInterval = null;
-  let camCounts = {1:0, 2:0, 3:0, 4:0};
-  const VALID_CAMS = [1,2,3,4];
 
   // Clock
   function updateClock() {
@@ -673,6 +806,8 @@ header {
     document.getElementById('elapsed').style.display = '';
     document.getElementById('cutCount').style.display = '';
 
+    document.getElementById('markerBtn').disabled = false;
+
     elapsedInterval = setInterval(() => {
       document.getElementById('elapsed').textContent = msToTC(getElapsed());
     }, 40);
@@ -700,88 +835,148 @@ header {
     document.getElementById('elapsed').className = 'elapsed ready';
 
     setActiveCam(null);
+    document.getElementById('markerBtn').disabled = true;
     enableExports();
     showToast('Session stopped — ready to export');
   }
 
-  function setActiveCam(n) {
-    [1,2,3,4].forEach(i => {
-      document.getElementById('cam'+i).classList.toggle('active', i === n);
+  // ── Camera panel rendering ────────────────────────────────────
+  function renderCamPanel() {
+    const list = document.getElementById('camList');
+    list.innerHTML = '';
+    cameras.forEach((cam, idx) => {
+      const div = document.createElement('div');
+      div.className = 'cam-btn' + (currentCam === cam.id ? ' active' : '');
+      div.id = 'cam' + cam.id;
+      div.style.setProperty('--cam-color', cam.color);
+      const nameVal = cam.name.replace(/"/g, '&quot;');
+      const count = camCounts[cam.id] || 0;
+      div.innerHTML = `
+        <div class="key-badge">${idx + 1}</div>
+        <div class="cam-info">
+          <input class="cam-name-input" type="text" value="${nameVal}" id="camName${cam.id}">
+          <div class="cam-cut-count" id="camCuts${cam.id}">${count} cut${count===1?'':'s'}</div>
+        </div>
+        <div class="cam-indicator"></div>
+        <button class="cam-remove" title="Remove camera">×</button>`;
+      div.querySelector('.cam-name-input').addEventListener('click', e => e.stopPropagation());
+      div.querySelector('.cam-name-input').addEventListener('input', e => { cam.name = e.target.value; });
+      div.querySelector('.cam-remove').addEventListener('click', e => removeCamera(cam.id, e));
+      div.addEventListener('click', e => {
+        if (e.target.closest('.cam-remove') || e.target.closest('.cam-name-input')) return;
+        logCut(cam.id);
+      });
+      list.appendChild(div);
     });
-    currentCam = n;
   }
 
-  function logCut(n) {
-    if (!isRunning) return;
+  function addCamera() {
+    if (cameras.length >= 8) { showToast('Max 8 cameras'); return; }
+    const id = nextCamId++;
+    const color = CAM_COLORS[cameras.length % CAM_COLORS.length];
+    cameras.push({id, name: 'Camera ' + id, color});
+    camCounts[id] = 0;
+    renderCamPanel();
+  }
 
+  function removeCamera(id, e) {
+    e.stopPropagation();
+    if (cameras.length <= 1) { showToast('Need at least one camera'); return; }
+    if (isRunning && currentCam === id) { showToast("Can't remove active camera"); return; }
+    cameras = cameras.filter(c => c.id !== id);
+    renderCamPanel();
+  }
+
+  // ── Active cam + cut logging ───────────────────────────────────
+  function setActiveCam(id) {
+    cameras.forEach(cam => {
+      const btn = document.getElementById('cam' + cam.id);
+      if (btn) btn.classList.toggle('active', cam.id === id);
+    });
+    currentCam = id;
+  }
+
+  function logCut(id) {
+    if (!isRunning) return;
+    const cam = cameras.find(c => c.id === id);
+    if (!cam) return;
     const now = getElapsed();
 
-    // Close previous cut
     if (cuts.length > 0 && !cuts[cuts.length-1].outMs) {
       cuts[cuts.length-1].outMs = now;
       cuts[cuts.length-1].outTC = msToTC(now);
     }
 
-    // Open new cut
-    const camName = document.getElementById('camName'+n).value || 'Camera '+n;
-    cuts.push({
-      num: cuts.length + 1,
-      cam: n,
-      camName: camName,
-      inMs: now,
-      inTC: msToTC(now),
-      outMs: null,
-      outTC: null,
-      wallTime: new Date().toISOString()
-    });
+    const nameEl = document.getElementById('camName' + id);
+    const camName = (nameEl ? nameEl.value : null) || cam.name;
+    cuts.push({num: cuts.length+1, cam: id, camName, camColor: cam.color,
+      inMs: now, inTC: msToTC(now), outMs: null, outTC: null, wallTime: new Date().toISOString()});
 
-    camCounts[n]++;
-    document.getElementById('camCuts'+n).textContent = camCounts[n] + ' cut' + (camCounts[n]===1?'':'s');
+    camCounts[id] = (camCounts[id] || 0) + 1;
+    const cutsEl = document.getElementById('camCuts' + id);
+    if (cutsEl) cutsEl.textContent = camCounts[id] + ' cut' + (camCounts[id]===1?'':'s');
     document.getElementById('cutCount').textContent = cuts.length + ' CUT' + (cuts.length===1?'':'S');
 
-    setActiveCam(n);
-
-    // Fire animation
-    const btn = document.getElementById('cam'+n);
-    btn.classList.remove('fired');
-    void btn.offsetWidth;
-    btn.classList.add('fired');
+    setActiveCam(id);
+    const btn = document.getElementById('cam' + id);
+    if (btn) { btn.classList.remove('fired'); void btn.offsetWidth; btn.classList.add('fired'); }
 
     renderLog();
   }
 
-  // FIX: Don't wipe innerHTML — only remove .log-entry elements so #logEmpty stays in the DOM
   function renderLog() {
     const scroll = document.getElementById('logScroll');
     const empty = document.getElementById('logEmpty');
-
-    // Remove only existing log entries, leaving the empty-state element intact
     scroll.querySelectorAll('.log-entry').forEach(el => el.remove());
 
-    if (cuts.length === 0) {
+    if (cuts.length === 0 && markers.length === 0) {
       empty.style.display = 'flex';
       return;
     }
     empty.style.display = 'none';
 
-    const colors = ['var(--cam1)','var(--cam2)','var(--cam3)','var(--cam4)'];
+    // Interleave cuts and markers sorted by time
+    const events = [
+      ...cuts.map(c => ({...c, _type:'cut'})),
+      ...markers.map(m => ({...m, inMs: m.ms, _type:'marker'}))
+    ].sort((a, b) => a.inMs - b.inMs);
 
-    cuts.forEach((cut, idx) => {
-      const isLatest = idx === cuts.length - 1;
-      const duration = cut.outMs != null ? msToDuration(cut.outMs - cut.inMs) : '–';
+    events.forEach((ev, idx) => {
       const div = document.createElement('div');
-      div.className = 'log-entry' + (isLatest ? ' latest' : '');
-      div.innerHTML = `
-        <div class="entry-num">${String(cut.num).padStart(3,'0')}</div>
-        <div class="entry-bar" style="background:${colors[cut.cam-1]}"></div>
-        <div class="entry-cam" style="color:${colors[cut.cam-1]}">${cut.camName}</div>
-        <div class="entry-tc">${cut.inTC}${cut.outTC ? ' → '+cut.outTC : ''}</div>
-        <div class="entry-duration">${duration}</div>
-      `;
+      if (ev._type === 'marker') {
+        div.className = 'log-entry marker';
+        div.innerHTML = `
+          <div class="entry-num">M${String(ev.num).padStart(2,'0')}</div>
+          <div class="entry-bar" style="background:#fbbf24"></div>
+          <div class="marker-diamond">◆ MARKER</div>
+          <div class="entry-tc">${ev.tc}</div>
+          <div class="entry-duration"></div>`;
+      } else {
+        const isLatest = ev._type === 'cut' && idx === events.length - 1;
+        const duration = ev.outMs != null ? msToDuration(ev.outMs - ev.inMs) : '–';
+        const color = ev.camColor || 'var(--cam1)';
+        div.className = 'log-entry' + (isLatest ? ' latest' : '');
+        div.innerHTML = `
+          <div class="entry-num">${String(ev.num).padStart(3,'0')}</div>
+          <div class="entry-bar" style="background:${color}"></div>
+          <div class="entry-cam" style="color:${color}">${ev.camName}</div>
+          <div class="entry-tc">${ev.inTC}${ev.outTC ? ' → '+ev.outTC : ''}</div>
+          <div class="entry-duration">${duration}</div>`;
+      }
       scroll.appendChild(div);
     });
 
     scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  // ── Markers ───────────────────────────────────────────────────
+  function addMarker() {
+    if (!isRunning) return;
+    const now = getElapsed();
+    const num = markers.length + 1;
+    markers.push({num, ms: now, tc: msToTC(now), wallTime: new Date().toISOString()});
+    renderLog();
+    showToast('Marker ' + num + ' added');
   }
 
   function enableExports() {
@@ -801,12 +996,16 @@ header {
     if (isRunning) { showToast('Stop session first'); return; }
     if (!confirm('Are you sure you want to start a new project?\nThis data will be lost.')) return;
     cuts = [];
+    markers = [];
+    cameras = [
+      {id:1, name:'Camera 1', color:'var(--cam1)'},
+      {id:2, name:'Camera 2', color:'var(--cam2)'},
+      {id:3, name:'Camera 3', color:'var(--cam3)'},
+      {id:4, name:'Camera 4', color:'var(--cam4)'},
+    ];
+    nextCamId = 5;
     camCounts = {1:0,2:0,3:0,4:0};
     currentCam = null;
-    [1,2,3,4].forEach(i => {
-      document.getElementById('camCuts'+i).textContent = '0 cuts';
-      document.getElementById('cam'+i).classList.remove('active');
-    });
     document.getElementById('sessionName').value = '';
     document.getElementById('cutCount').textContent = '0 CUTS';
     document.getElementById('elapsed').textContent = '00:00:00.000';
@@ -816,7 +1015,9 @@ header {
     document.getElementById('statusText').textContent = 'STANDBY';
     document.getElementById('elapsed').style.display = 'none';
     document.getElementById('cutCount').style.display = 'none';
+    document.getElementById('markerBtn').disabled = true;
     startTime = null;
+    renderCamPanel();
     enableExports();
     renderLog();
     showToast('New project');
@@ -831,10 +1032,10 @@ header {
   function undoLastCut() {
     if (!isRunning || cuts.length === 0) return;
     const removed = cuts.pop();
-    camCounts[removed.cam] = Math.max(0, camCounts[removed.cam]-1);
-    document.getElementById('camCuts'+removed.cam).textContent = camCounts[removed.cam] + ' cut' + (camCounts[removed.cam]===1?'':'s');
+    camCounts[removed.cam] = Math.max(0, (camCounts[removed.cam]||1) - 1);
+    const cutsEl = document.getElementById('camCuts' + removed.cam);
+    if (cutsEl) cutsEl.textContent = camCounts[removed.cam] + ' cut' + (camCounts[removed.cam]===1?'':'s');
     document.getElementById('cutCount').textContent = cuts.length + ' CUT' + (cuts.length===1?'':'S');
-    // Reopen previous
     if (cuts.length > 0) {
       cuts[cuts.length-1].outMs = null;
       cuts[cuts.length-1].outTC = null;
@@ -906,6 +1107,14 @@ header {
       edl += `* FROM CLIP NAME: ${cut.camName}\n\n`;
     });
 
+    if (markers.length > 0) {
+      edl += `\n`;
+      markers.forEach(m => {
+        const tc = msToEDLTC(m.ms);
+        edl += `* MARKER ${String(m.num).padStart(2,'0')}: ${tc}\n`;
+      });
+    }
+
     downloadFile(edl, `${name}.edl`, 'text/plain');
     showToast('EDL exported');
   }
@@ -931,12 +1140,13 @@ header {
     xml += `<!DOCTYPE fcpxml>\n`;
     xml += `<fcpxml version="1.9">\n`;
     xml += `  <resources>\n`;
-    [1,2,3,4].forEach(i => {
-      xml += `    <format id="r${i}" name="FFVideoFormat1080p2398" frameDuration="1001/24000s" width="1920" height="1080"/>\n`;
+    cameras.forEach(cam => {
+      xml += `    <format id="r${cam.id}" name="FFVideoFormat1080p2398" frameDuration="1001/24000s" width="1920" height="1080"/>\n`;
     });
-    [1,2,3,4].forEach(i => {
-      const camName = document.getElementById('camName'+i).value || 'Camera '+i;
-      xml += `    <asset id="asset${i}" name="${camName}" start="0s" duration="${msToRational(totalMs)}" hasVideo="1" hasAudio="1" format="r${i}">\n`;
+    cameras.forEach(cam => {
+      const nameEl = document.getElementById('camName'+cam.id);
+      const camName = (nameEl ? nameEl.value : null) || cam.name;
+      xml += `    <asset id="asset${cam.id}" name="${camName}" start="0s" duration="${msToRational(totalMs)}" hasVideo="1" hasAudio="1" format="r${cam.id}">\n`;
       xml += `      <media-rep kind="original-media" src="file:///path/to/${camName.replace(/ /g,'_')}.mp4"/>\n`;
       xml += `    </asset>\n`;
     });
@@ -967,11 +1177,12 @@ header {
       startTime: sessionStartWall,
       timecodeFormat: 'HH:MM:SS.mmm',
       totalCuts: cuts.length,
-      cameras: [1,2,3,4].map(i => ({
-        id: i,
-        name: document.getElementById('camName'+i).value || 'Camera '+i,
-        cuts: camCounts[i]
+      cameras: cameras.map(cam => ({
+        id: cam.id,
+        name: (document.getElementById('camName'+cam.id)||{}).value || cam.name,
+        cuts: camCounts[cam.id] || 0
       })),
+      markers: markers,
       cuts: cuts
     };
     downloadFile(JSON.stringify(data, null, 2), `${name}.json`, 'application/json');
@@ -996,17 +1207,19 @@ header {
       return;
     }
 
-    const camNum = parseInt(e.key);
-    if (VALID_CAMS.includes(camNum)) {
-      logCut(camNum);
+    const camIdx = parseInt(e.key) - 1;
+    if (!isNaN(camIdx) && camIdx >= 0 && camIdx < cameras.length) {
+      logCut(cameras[camIdx].id);
       return;
     }
 
+    if (e.key === 'm' || e.key === 'M') { addMarker(); return; }
     if (e.key === 'z' || e.key === 'Z') { undoLastCut(); return; }
     if (e.key === 'e' || e.key === 'E') { if (cuts.length > 0 && !isRunning) exportEDL(); return; }
   });
 
   // Init
+  renderCamPanel();
   renderLog();
 </script>
 
